@@ -6,9 +6,10 @@
 #include <text/hexdump.h>
 #include <crash/info.h>
 
-int	  g_kern_noascii_width = 1;
-int	  g_kern_noascii_pt;
-CFNumberRef g_cfNum;
+bool		g_kern_noascii_width = true;
+unsigned	g_double_width_unicode = 0x2500;
+long		g_kern_noascii_pt;
+CFNumberRef	g_cfNum;
 
 namespace ng
 {
@@ -139,11 +140,14 @@ namespace ct
 					}
 					CFRelease(str);
 				}
-				if(_column_width1 > 0 && _column_width2 > 0 && (g_kern_noascii_pt = _column_width1 - _column_width2) >= 1)
+				if(_column_width1 > 0 && _column_width2 > 0 && (g_kern_noascii_pt = _column_width1 - _column_width2) > 0)
 				{
-					// printf("g_kern_noascii_pt:  %d\n", g_kern_noascii_pt);
 					g_cfNum = CFNumberCreate(NULL, kCFNumberIntType, &g_kern_noascii_pt); // FIXME IntType
+				}else{
+					g_kern_noascii_pt = 0;
 				}
+				fprintf(stderr, "mm width:%f, 一 width:%f,   set  g_kern_noascii_pt: %lu,   g_double_width_unicode: 0x%X\n",
+					_column_width1, _column_width2, g_kern_noascii_pt, g_double_width_unicode);
 			}
 
 			if(CFMutableAttributedStringRef str = CFAttributedStringCreateMutable(kCFAllocatorDefault, 0))
@@ -206,23 +210,21 @@ namespace ct
 						CFAttributedStringReplaceString(str, CFRangeMake(0, 0), cfStr);
 						CFAttributedStringSetAttribute(str, CFRangeMake(0, CFAttributedStringGetLength(str)), kCTFontAttributeName, styles.font());
 						CFAttributedStringSetAttribute(str, CFRangeMake(0, CFAttributedStringGetLength(str)), kCTForegroundColorAttributeName, textColor ?: styles.foreground());
-						if(g_kern_noascii_width)
+						if(g_kern_noascii_pt > 0)
 						{
 							for(unsigned int i = 0; i < CFStringGetLength(cfStr); ++i)
 							{
 								unsigned short chr = CFStringGetCharacterAtIndex(cfStr, i);
 								// printf("%hu,", chr);
 								static int ii=0,jj=0;
-								if (g_kern_noascii_pt >= 1 && chr > 0x2500)	// TODO FIXME
+								if (chr > g_double_width_unicode)	// TODO FIXME
 								{
 									// printf("(%hu),", chr);
-									// CFAttributedStringSetAttribute(str, CFRangeMake(i, 1), kCTFontAttributeName, font);
 									// CFAttributedStringRef CFAttributedStringCreate(CFAllocatorRef alloc, CFStringRef str, CFDictionaryRef attributes);
 									ii+=1;
 									CFAttributedStringSetAttribute(str, CFRangeMake(i, 1), kCTKernAttributeName, g_cfNum);
 								}else{
 									// printf("[%hu],", chr);
-									// CFAttributedStringSetAttribute(str, CFRangeMake(i, 1), kCTFontAttributeName, font);
 									jj+=1;
 								}
 								// if(ii>0 && jj>0  && ((ii%1000)==0 || (jj%1000)==0)) fprintf(stderr, "check kern: %d  %d\n", ii, jj);
