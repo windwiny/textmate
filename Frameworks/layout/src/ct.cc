@@ -8,7 +8,7 @@
 
 bool		g_kern_noascii_width = true;
 unsigned	g_double_width_unicode = 0x2500;
-long		g_kern_noascii_pt;
+CGFloat	g_kern_noascii_pt;
 CFNumberRef	g_cfNum;
 
 namespace ng
@@ -142,11 +142,11 @@ namespace ct
 				}
 				if(_column_width1 > 0 && _column_width2 > 0 && (g_kern_noascii_pt = _column_width1 - _column_width2) > 0)
 				{
-					g_cfNum = CFNumberCreate(NULL, kCFNumberIntType, &g_kern_noascii_pt); // FIXME IntType
+					g_cfNum = CFNumberCreate(NULL, kCFNumberCGFloatType, &g_kern_noascii_pt);
 				}else{
 					g_kern_noascii_pt = 0;
 				}
-				fprintf(stderr, "mm width:%f, 一 width:%f,   set  g_kern_noascii_pt: %lu,   g_double_width_unicode: 0x%X\n",
+				fprintf(stderr, "mm width:%f, 一 width:%f,   set  g_kern_noascii_pt: %f,   g_double_width_unicode: 0x%X\n",
 					_column_width1, _column_width2, g_kern_noascii_pt, g_double_width_unicode);
 			}
 
